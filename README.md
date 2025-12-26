@@ -1,0 +1,303 @@
+# 🚀 Veille LLM Agent System
+
+An intelligent AI-powered news monitoring system that automatically fetches the latest LLM/AI news, processes them through 4 specialized agents using Google Gemini, and sends you the top 5 ideas in Moroccan Darija via WhatsApp every day.
+
+## 📋 Overview
+
+This FastAPI backend:
+1. **Fetches** the 20 most recent LLM/AI news articles from TheNewsAPI.com
+2. **Processes** them through a 4-agent pipeline powered by Google Gemini 2.0 Flash
+3. **Delivers** the top 5 ideas in Darija via WhatsApp using Twilio
+4. **Runs automatically** every day at 9:00 AM
+
+## 🏗️ Architecture
+
+```
+TheNewsAPI → Agent 1 (Analyze) → Agent 2 (Extract Ideas) → 
+Agent 3 (Select Top 5) → Agent 4 (Translate to Darija) → WhatsApp
+```
+
+### Agent Pipeline
+
+- **Agent 1 - News Analyzer**: Categorizes articles and scores technical relevance
+- **Agent 2 - Idea Extractor**: Extracts ~10 innovative ideas from articles
+- **Agent 3 - Reflection Agent**: Validates and selects the top 5 ideas
+- **Agent 4 - Darija Translator**: Translates ideas to Moroccan Darija
+
+## 🛠️ Tech Stack
+
+- **Framework**: FastAPI
+- **LLM**: Google Gemini 2.0 Flash (free tier)
+- **News API**: TheNewsAPI.com
+- **Messaging**: Twilio WhatsApp
+- **Scheduling**: APScheduler
+- **Language**: Python 3.10+
+
+## 📦 Installation
+
+### 1. Clone or navigate to the project directory
+
+```bash
+cd veille-llm-backend
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env with your API keys
+```
+
+Required API keys:
+- **TheNewsAPI**: Get from [thenewsapi.com](https://www.thenewsapi.com/)
+- **Google Gemini**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Twilio**: Sign up at [twilio.com](https://www.twilio.com/try-twilio)
+
+## ⚙️ Configuration
+
+Edit your `.env` file:
+
+```env
+# TheNewsAPI.com
+NEWSAPI_KEY=your_actual_key_here
+NEWSAPI_LIMIT=20
+
+# Google Gemini
+GEMINI_API_KEY=your_actual_key_here
+
+# Twilio
+TWILIO_ACCOUNT_SID=your_sid_here
+TWILIO_AUTH_TOKEN=your_token_here
+TWILIO_PHONE_FROM=+1234567890
+
+# WhatsApp
+WHATSAPP_TO_NUMBER=+213612345678
+
+# Scheduling
+SCHEDULE_TIME=09:00
+TIMEZONE=Europe/Paris
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+## 🚀 Running the Application
+
+### Development mode
+
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+### Production mode
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+## 📡 API Endpoints
+
+### `GET /`
+Health check endpoint
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "Veille LLM Agent System",
+  "timestamp": "2025-12-23T21:00:00"
+}
+```
+
+### `POST /trigger`
+Manually trigger the pipeline
+
+**Response:**
+```json
+{
+  "message": "Pipeline executed successfully",
+  "execution": {
+    "execution_id": "uuid",
+    "started_at": "timestamp",
+    "completed_at": "timestamp",
+    "status": "completed",
+    "articles_fetched": 20,
+    "ideas_extracted": 10,
+    "whatsapp_sent": true
+  }
+}
+```
+
+### `GET /status`
+Get current pipeline status
+
+**Response:**
+```json
+{
+  "is_running": false,
+  "last_execution": { ... },
+  "next_scheduled_run": "2025-12-24T09:00:00+01:00"
+}
+```
+
+### `GET /history?limit=10`
+Get execution history
+
+**Response:**
+```json
+{
+  "count": 10,
+  "executions": [ ... ]
+}
+```
+
+## 🧪 Testing
+
+### Test the complete pipeline
+
+```bash
+# Start the server
+uvicorn main:app --reload
+
+# In another terminal, trigger manually
+curl -X POST http://localhost:8000/trigger
+```
+
+### Check pipeline status
+
+```bash
+curl http://localhost:8000/status
+```
+
+### View execution history
+
+```bash
+curl http://localhost:8000/history
+```
+
+## 📱 WhatsApp Setup
+
+### Twilio Sandbox (for testing)
+
+1. Go to [Twilio Console](https://console.twilio.com/)
+2. Navigate to Messaging → Try it out → Send a WhatsApp message
+3. Follow instructions to join the sandbox
+4. Use the sandbox number as `TWILIO_PHONE_FROM`
+
+### Production WhatsApp
+
+1. Apply for WhatsApp Business API approval
+2. Get your approved WhatsApp number
+3. Update `TWILIO_PHONE_FROM` in `.env`
+
+## 📅 Scheduling
+
+The pipeline runs automatically every day at the configured time (default: 9:00 AM Europe/Paris).
+
+To change the schedule:
+1. Edit `SCHEDULE_TIME` in `.env` (format: `HH:MM`)
+2. Edit `TIMEZONE` if needed
+3. Restart the application
+
+## 📊 Logging
+
+Logs are written to:
+- **Console**: Real-time output
+- **File**: `app.log` (persistent)
+
+Log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`
+
+Set via `LOG_LEVEL` in `.env`
+
+## 🔧 Troubleshooting
+
+### "Missing required environment variables"
+- Make sure you've copied `.env.example` to `.env`
+- Fill in all required API keys
+
+### "Gemini API call failed"
+- Check your `GEMINI_API_KEY` is valid
+- Verify you haven't exceeded the free tier limit (60 RPM)
+
+### "WhatsApp message not received"
+- Verify your Twilio credentials
+- Check you've joined the WhatsApp sandbox (if using sandbox)
+- Ensure `WHATSAPP_TO_NUMBER` is in correct format: `+213612345678`
+
+### "No news articles fetched"
+- Check your `NEWSAPI_KEY` is valid
+- Verify you haven't exceeded the free tier limit (200 requests/day)
+
+## 📈 API Rate Limits
+
+- **Gemini Free Tier**: 60 requests/minute (we use ~4/day ✓)
+- **TheNewsAPI Free**: 200 requests/day (we use 1/day ✓)
+- **Twilio**: No limit on verified accounts (we use 1/day ✓)
+
+## 🗂️ Project Structure
+
+```
+veille-llm-backend/
+├── main.py                 # FastAPI app & pipeline orchestration
+├── config.py               # Configuration & env variables
+├── models.py               # Pydantic models
+├── prompts.py              # All agent prompts
+├── utils.py                # Utility functions
+├── scheduler.py            # APScheduler setup
+├── agents/
+│   ├── news_fetcher.py     # Agent 1: News analysis
+│   ├── idea_extractor.py   # Agent 2: Idea extraction
+│   ├── reflection_agent.py # Agent 3: Top 5 selection
+│   └── darija_translator.py# Agent 4: Darija translation
+├── services/
+│   ├── newsapi_service.py  # TheNewsAPI integration
+│   ├── gemini_service.py   # Google Gemini integration
+│   └── whatsapp_service.py # Twilio WhatsApp integration
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+## 🤝 Contributing
+
+This is a personal project, but feel free to fork and customize for your needs!
+
+## 📄 License
+
+MIT License - feel free to use and modify as needed.
+
+## 🎯 Next Steps
+
+After setup:
+1. ✅ Test each service individually
+2. ✅ Run the pipeline manually via `/trigger`
+3. ✅ Verify WhatsApp message delivery
+4. ✅ Let the scheduler run for a few days
+5. ✅ Adjust prompts based on results
+
+---
+
+**Built with ❤️ using FastAPI, Google Gemini, and Twilio**
