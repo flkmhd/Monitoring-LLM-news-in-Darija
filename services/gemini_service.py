@@ -88,9 +88,20 @@ class GeminiClient:
                         json.loads(response_text)
                         logger.info("Successfully received valid JSON response from Gemini")
                     except json.JSONDecodeError as e:
-                        logger.warning(f"Response is not valid JSON: {e}")
+                        logger.warning(f"Response is not valid JSON initially: {e}")
                         # Try to extract JSON from markdown code blocks
                         response_text = self._extract_json_from_markdown(response_text)
+                        
+                        # Validate again after extraction
+                        try:
+                            json.loads(response_text)
+                            logger.info("Successfully extracted valid JSON from markdown")
+                        except json.JSONDecodeError as e2:
+                            logger.error(f"Failed to extract valid JSON: {e2}")
+                            # If we can't parse it, we'll return it as is and let the caller handle the error
+                            # or we could raise an exception here to trigger a retry
+                            if attempt < max_retries - 1:
+                                raise Exception(f"Failed to parse JSON response: {e2}") from e2
                 
                 return response_text
                 
@@ -110,27 +121,28 @@ class GeminiClient:
     
     def _extract_json_from_markdown(self, text: str) -> str:
         """
-        Extract JSON from markdown code blocks if present.
+        Extract JSON from markdown code blocks using regex.
         
         Args:
             text: Response text that might contain markdown
         
         Returns:
-            Extracted JSON string
+            Extracted JSON string or original text
         """
-        # Look for ```json ... ``` or ``` ... ```
-        if "```json" in text:
-            start = text.find("```json") + 7
-            end = text.find("```", start)
-            if end != -1:
-                return text[start:end].strip()
-        elif "```" in text:
-            start = text.find("```") + 3
-            end = text.find("```", start)
-            if end != -1:
-                return text[start:end].strip()
+        import re
         
-        return text
+        # Pattern to find JSON blocks: ```json ... ``` or just ``` ... ```
+        # We look for the content between the backticks
+        pattern = r"```(?:json)?\s*(.*?)```"
+        
+        # Find all matches (DOTALL to match newlines)
+        matches = re.findall(pattern, text, re.DOTALL)
+        
+        if matches:
+            # Return the first match, stripped of whitespace
+            return matches[0].strip()
+        
+        return text.strip()
 
 
 # Create a singleton instance

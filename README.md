@@ -7,14 +7,14 @@ An intelligent AI-powered news monitoring system that automatically fetches the 
 This FastAPI backend:
 1. **Fetches** the 20 most recent LLM/AI news articles from TheNewsAPI.com
 2. **Processes** them through a 4-agent pipeline powered by Google Gemini 2.0 Flash
-3. **Delivers** the top 5 ideas in Darija via WhatsApp using Twilio
+3. **Delivers** the top 5 ideas in Darija via Telegram using a Bot
 4. **Runs automatically** every day at 9:00 AM
 
 ## 🏗️ Architecture
 
 ```
 TheNewsAPI → Agent 1 (Analyze) → Agent 2 (Extract Ideas) → 
-Agent 3 (Select Top 5) → Agent 4 (Translate to Darija) → WhatsApp
+Agent 3 (Select Top 5) → Agent 4 (Translate to Darija) → Telegram Bot
 ```
 
 ### Agent Pipeline
@@ -29,7 +29,7 @@ Agent 3 (Select Top 5) → Agent 4 (Translate to Darija) → WhatsApp
 - **Framework**: FastAPI
 - **LLM**: Google Gemini 2.0 Flash (free tier)
 - **News API**: TheNewsAPI.com
-- **Messaging**: Twilio WhatsApp
+- **Messaging**: Telegram Bot API
 - **Scheduling**: APScheduler
 - **Language**: Python 3.10+
 
@@ -71,7 +71,6 @@ cp .env.example .env
 Required API keys:
 - **TheNewsAPI**: Get from [thenewsapi.com](https://www.thenewsapi.com/)
 - **Google Gemini**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
-- **Twilio**: Sign up at [twilio.com](https://www.twilio.com/try-twilio)
 
 ## ⚙️ Configuration
 
@@ -85,13 +84,9 @@ NEWSAPI_LIMIT=20
 # Google Gemini
 GEMINI_API_KEY=your_actual_key_here
 
-# Twilio
-TWILIO_ACCOUNT_SID=your_sid_here
-TWILIO_AUTH_TOKEN=your_token_here
-TWILIO_PHONE_FROM=+1234567890
-
-# WhatsApp
-WHATSAPP_TO_NUMBER=+213612345678
+# Telegram Bot Keys (See "How to create a Bot" below)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
 
 # Scheduling
 SCHEDULE_TIME=09:00
@@ -145,7 +140,7 @@ Manually trigger the pipeline
     "status": "completed",
     "articles_fetched": 20,
     "ideas_extracted": 10,
-    "whatsapp_sent": true
+    "telegram_sent": true
   }
 }
 ```
@@ -197,20 +192,60 @@ curl http://localhost:8000/status
 curl http://localhost:8000/history
 ```
 
-## 📱 WhatsApp Setup
+## 🤖 How to Create a Telegram Bot
 
-### Twilio Sandbox (for testing)
+To receive your daily news on Telegram, follow these simple steps:
 
-1. Go to [Twilio Console](https://console.twilio.com/)
-2. Navigate to Messaging → Try it out → Send a WhatsApp message
-3. Follow instructions to join the sandbox
-4. Use the sandbox number as `TWILIO_PHONE_FROM`
+### 1. Create the Bot 🤖
+1. Open Telegram and search for **[@BotFather](https://t.me/BotFather)** (the official bot builder).
+2. Click **Start** or type `/start` to begin the conversation.
+3. Send the command `/newbot` to create a new bot.
+4. **Name**: BotFather will ask for a name. Enter something like `My Tech News Bot`.
+5. **Username**: Next, it will ask for a username. It **must** end in `bot` (e.g., `VeilleLLM_bot`).
+6. 🎉 **Success!** BotFather will send you a message with your **TOKEN**.
+   👉 **Copy this token** (it looks like `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`) into your `.env` file:
+   ```env
+   TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+   ```
 
-### Production WhatsApp
+### 2. Get Your Chat ID 🆔
+1. Search for your new bot by its username and click **Start**.
+   > **Important**: You MUST send `/start` to your own bot first, otherwise it cannot message you.
+2. Now, search for **[@userinfobot](https://t.me/userinfobot)** and click **Start**.
+3. It will reply with your details. Look for the `Id` field number.
+   👉 **Copy this number** (e.g., `123456789`) into your `.env` file:
+   ```env
+   TELEGRAM_CHAT_ID=123456789
+   ```
 
-1. Apply for WhatsApp Business API approval
-2. Get your approved WhatsApp number
-3. Update `TWILIO_PHONE_FROM` in `.env`
+### 3. Verify ✅
+Run the pipeline manually to test:
+```bash
+python run_pipeline.py
+```
+You should receive a message instantly!
+
+## 🏃‍♂️ Daily Execution (Script Mode)
+
+You can run the pipeline as a standalone script without keeping the server open. This is perfect for scheduling with Windows Task Scheduler.
+
+### 1. Run manually
+```bash
+# Activate venv
+venv\Scripts\activate
+
+# Run the script
+python run_pipeline.py
+```
+
+### 2. Schedule on Windows
+1. Open **Task Scheduler**
+2. Create Basic Task -> "Veille LLM Daily"
+3. Trigger: Daily at 9:00 AM
+4. Action: Start a program
+   - Program/script: `path\to\python.exe` (from your venv)
+   - Arguments: `run_pipeline.py`
+   - Start in: `path\to\your\project\folder`
 
 ## 📅 Scheduling
 
@@ -241,10 +276,10 @@ Set via `LOG_LEVEL` in `.env`
 - Check your `GEMINI_API_KEY` is valid
 - Verify you haven't exceeded the free tier limit (60 RPM)
 
-### "WhatsApp message not received"
-- Verify your Twilio credentials
-- Check you've joined the WhatsApp sandbox (if using sandbox)
-- Ensure `WHATSAPP_TO_NUMBER` is in correct format: `+213612345678`
+### "Telegram message not received"
+- Verify your Bot Token and Chat ID
+- Check if you have started a conversation with the bot (`/start`)
+- Check logs for specific API error messages
 
 ### "No news articles fetched"
 - Check your `NEWSAPI_KEY` is valid
@@ -254,7 +289,7 @@ Set via `LOG_LEVEL` in `.env`
 
 - **Gemini Free Tier**: 60 requests/minute (we use ~4/day ✓)
 - **TheNewsAPI Free**: 200 requests/day (we use 1/day ✓)
-- **Twilio**: No limit on verified accounts (we use 1/day ✓)
+- **Telegram**: No limit for reasonable bot usage (we use 1/day ✓)
 
 ## 🗂️ Project Structure
 
@@ -274,7 +309,7 @@ veille-llm-backend/
 ├── services/
 │   ├── newsapi_service.py  # TheNewsAPI integration
 │   ├── gemini_service.py   # Google Gemini integration
-│   └── whatsapp_service.py # Twilio WhatsApp integration
+│   └── telegram_service.py # Telegram Bot integration
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -294,10 +329,10 @@ MIT License - feel free to use and modify as needed.
 After setup:
 1. ✅ Test each service individually
 2. ✅ Run the pipeline manually via `/trigger`
-3. ✅ Verify WhatsApp message delivery
+3. ✅ Verify Telegram message delivery
 4. ✅ Let the scheduler run for a few days
 5. ✅ Adjust prompts based on results
 
 ---
 
-**Built with ❤️ using FastAPI, Google Gemini, and Twilio**
+**Built with ❤️ using FastAPI, Google Gemini, and Telegram**

@@ -22,13 +22,9 @@ class Config:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     
-    # Twilio
-    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
-    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
-    TWILIO_PHONE_FROM: str = os.getenv("TWILIO_PHONE_FROM", "")
-    
-    # WhatsApp
-    WHATSAPP_TO_NUMBER: str = os.getenv("WHATSAPP_TO_NUMBER", "")
+    # Telegram
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
     
     # Scheduling
     SCHEDULE_TIME: str = os.getenv("SCHEDULE_TIME", "09:00")
@@ -47,10 +43,8 @@ class Config:
         required_vars = {
             "NEWSAPI_KEY": cls.NEWSAPI_KEY,
             "GEMINI_API_KEY": cls.GEMINI_API_KEY,
-            "TWILIO_ACCOUNT_SID": cls.TWILIO_ACCOUNT_SID,
-            "TWILIO_AUTH_TOKEN": cls.TWILIO_AUTH_TOKEN,
-            "TWILIO_PHONE_FROM": cls.TWILIO_PHONE_FROM,
-            "WHATSAPP_TO_NUMBER": cls.WHATSAPP_TO_NUMBER,
+            "TELEGRAM_BOT_TOKEN": cls.TELEGRAM_BOT_TOKEN,
+            "TELEGRAM_CHAT_ID": cls.TELEGRAM_CHAT_ID,
         }
         
         missing = [key for key, value in required_vars.items() if not value]

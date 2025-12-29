@@ -30,7 +30,7 @@ async def fetch_latest_news(
         httpx.HTTPError: If API request fails
     """
     if keywords is None:
-        keywords = ["LLM", "GPT", "Claude", "Gemini", "AI agents", "large language model"]
+        keywords = ["AI", "LLM", "GPT", "Claude", "Gemini", "AI agents", "large language model"]
     
     if limit is None:
         limit = config.NEWSAPI_LIMIT
@@ -54,19 +54,48 @@ async def fetch_latest_news(
     
     logger.info(f"Fetching news from TheNewsAPI with keywords: {keywords}")
     
+    current_page = 1
+    all_articles = []
+    
     try:
         async with httpx.AsyncClient(timeout=config.API_TIMEOUT) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
+            while len(all_articles) < limit:
+                # Update params for current page
+                params["page"] = current_page
+                
+                logger.info(f"Fetching page {current_page}...")
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                
+                data = response.json()
+                page_articles = data.get("data", [])
+                
+                if not page_articles:
+                    logger.info("No more articles found.")
+                    break
+                
+                # Add to total collection
+                all_articles.extend(page_articles)
+                
+                # Check if we've reached the end of results (less than 3 items usually means last page on free tier)
+                # But safer to just check if we got what we asked for, though free tier is weird.
+                # If we got 0 items, we handle it above. 
+                # If we keep getting items, we continue.
+                # Safety break to avoid infinite loops if something goes wrong
+                if current_page >= 10: 
+                    logger.warning("Reached maximum pagination limit (10 pages). Stopping.")
+                    break
+                    
+                current_page += 1
             
-            data = response.json()
-            articles = data.get("data", [])
+            # Trim to exact limit
+            all_articles = all_articles[:limit]
             
-            logger.info(f"Successfully fetched {len(articles)} articles")
+            logger.info(f"Successfully fetched {len(all_articles)} articles (requested limit: {limit})")
             
             # Transform to our format
             transformed_articles = []
-            for article in articles:
+            for article in all_articles:
                 transformed_articles.append({
                     "title": article.get("title", ""),
                     "url": article.get("url", ""),

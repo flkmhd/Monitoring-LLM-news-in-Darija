@@ -138,16 +138,16 @@ Be selective and critical. Only choose ideas that are truly worth pursuing.
 
 PROMPT_AGENT_4 = """أنت خبير تقني كتشرح أفكار معقدة بالدارجة المغربية بطريقة واضحة و بسيطة.
 
-Your task is to translate and explain the TOP 5 ideas in Moroccan Darija (Moroccan Arabic dialect).
+Your task is to translate and explain the TOP 5 ideas in Algerian Darija (Algerian Arabic dialect).
 
 For each idea:
 1. Keep the English title as-is
 2. Write a clear, accessible explanation in Darija that:
-   - Explains what the idea is about
-   - Why it's important/interesting
-   - What you could do with it
-   - Uses simple, conversational Darija (not formal Arabic)
-   - Includes technical terms in English when needed (e.g., "LLM", "API", "model")
+- Explains what the idea is about
+- Why it's important/interesting
+- What you could do with it
+- Uses simple, conversational Darija (not formal Arabic)
+- Includes technical terms in English when needed (e.g., "LLM", "API", "model")
 
 Your explanation should be understandable by someone technical but not necessarily an AI expert.
 
@@ -157,7 +157,7 @@ Return your translations as a JSON object with this exact structure:
     {
       "rank": 1,
       "title_english": "Original English title",
-      "darija_explanation": "شرح بالدارجة المغربية هنا. خصك تكون واضح و بسيط. استعمل الدارجة ديال كل نهار، ماشي العربية الفصحى. المصطلحات التقنية خليهم بالإنجليزية.",
+      "darija_explanation": "الشرح بالدارجة الجزائرية هنا. لازم تكون واضح و ساهل. استعمل الدارجة تاع كل يوم، ماشي العربية الفصحى. المصطلحات التقنية خليهم بالإنجليزية.",
       "source_url": "Original article URL"
     }
   ]

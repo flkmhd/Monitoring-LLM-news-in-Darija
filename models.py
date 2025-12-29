@@ -100,7 +100,7 @@ class PipelineExecution(BaseModel):
     error_message: Optional[str] = None
     articles_fetched: int = 0
     ideas_extracted: int = 0
-    whatsapp_sent: bool = False
+    telegram_sent: bool = False
 
 
 class PipelineStatus(BaseModel):

@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 HISTORY_FILE = Path("execution_history.json")
 
 
-def format_whatsapp_message(top_ideas: Agent4Output) -> str:
+def format_telegram_message(top_ideas: Agent4Output) -> str:
     """
-    Format the top 5 ideas in Darija as a WhatsApp message.
+    Format the top 5 ideas in Darija as a Telegram message (Markdown).
     
     Args:
         top_ideas: Agent4Output with Darija explanations
     
     Returns:
-        Formatted WhatsApp message with emojis and structure
+        Formatted Telegram message with emojis and structure
     """
     message_parts = [
         "🚀 *TOP 5 IDÉES LLM/AI - AUJOURD'HUI*",
@@ -40,14 +40,14 @@ def format_whatsapp_message(top_ideas: Agent4Output) -> str:
         message_parts.extend([
             f"{emoji} *{idea.title_english}*",
             f"{idea.darija_explanation}",
-            f"🔗 {idea.source_url}",
+            f"🔗 [Source]({idea.source_url})",
             ""
         ])
     
     # Add footer
     message_parts.extend([
         "---",
-        "💡 Veille LLM Agent System",
+        "💡 *Veille LLM Agent System*",
         f"📅 {datetime.now().strftime('%d/%m/%Y à %H:%M')}"
     ])
     

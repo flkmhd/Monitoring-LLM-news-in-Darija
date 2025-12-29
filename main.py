@@ -15,13 +15,13 @@ from fastapi.responses import JSONResponse
 from config import config
 from models import PipelineExecution, PipelineStatus
 from services.newsapi_service import fetch_latest_news
-from services.whatsapp_service import whatsapp_service
+from services.telegram_service import telegram_service
 from agents.news_fetcher import analyze_news
 from agents.idea_extractor import extract_ideas
 from agents.reflection_agent import validate_and_reflect
 from agents.darija_translator import translate_to_darija
 from utils import (
-    format_whatsapp_message,
+    format_telegram_message,
     log_pipeline_execution,
     save_execution_history,
     load_execution_history,
@@ -148,20 +148,18 @@ async def run_full_pipeline() -> PipelineExecution:
             print(f"  Source: {idea.source_url}")
         print(f"\n{'='*80}\n")
         
-        # Step 6: Format and send WhatsApp message (DISABLED FOR NOW)
-        # log_pipeline_execution("send_whatsapp", "started")
-        # message = format_whatsapp_message(agent4_output)
-        # success = await whatsapp_service.send_message(message)
-        # execution.whatsapp_sent = success
-        # 
-        # if success:
-        #     log_pipeline_execution("send_whatsapp", "completed")
-        # else:
-        #     log_pipeline_execution("send_whatsapp", "failed")
+        # Step 6: Format and send Telegram message
+        log_pipeline_execution("send_telegram", "started")
+        message = format_telegram_message(agent4_output)
+        success = await telegram_service.send_message(message)
+        execution.telegram_sent = success
         
-        # Skip WhatsApp for now
-        execution.whatsapp_sent = False
-        print("\n⚠️  WhatsApp sending is DISABLED (for testing)\n")
+        if success:
+            log_pipeline_execution("send_telegram", "completed")
+            print("\n✅ Telegram message sent successfully!")
+        else:
+            log_pipeline_execution("send_telegram", "failed")
+            print("\n❌ Failed to send Telegram message.")
         
         # Mark as completed
         execution.status = "completed"
@@ -181,17 +179,17 @@ async def run_full_pipeline() -> PipelineExecution:
             "error": str(e)
         })
         
-        # Try to send error notification via WhatsApp (DISABLED)
-        # try:
-        #     error_message = (
-        #         "⚠️ *ERREUR - Veille LLM*\n\n"
-        #         f"Le pipeline a échoué:\n{str(e)}\n\n"
-        #         f"Execution ID: {execution_id}\n"
-        #         f"Timestamp: {datetime.now().strftime('%d/%m/%Y à %H:%M')}"
-        #     )
-        #     await whatsapp_service.send_message(error_message)
-        # except:
-        #     pass  # Don't fail if error notification fails
+        # Try to send error notification via Telegram
+        try:
+            error_message = (
+                "⚠️ *ERREUR - Veille LLM*\n\n"
+                f"Le pipeline a échoué:\n{str(e)}\n\n"
+                f"Execution ID: {execution_id}\n"
+                f"Timestamp: {datetime.now().strftime('%d/%m/%Y à %H:%M')}"
+            )
+            await telegram_service.send_message(error_message)
+        except:
+            pass  # Don't fail if error notification fails
         
         raise
     
